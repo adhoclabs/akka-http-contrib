@@ -1,10 +1,10 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ HttpRequest, StatusCodes }
+import akka.http.scaladsl.server.directives.{ MethodDirectives, PathDirectives, RouteDirectives }
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import co.adhoclabs.akka.http.contrib.ThrottleConfiguration
-import co.adhoclabs.akka.http.contrib.clients.StorageClient
 import org.mockito.Mockito._
+import org.mockito.Matchers._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ BeforeAndAfter, FunSuite }
 
@@ -15,14 +15,18 @@ class SomeService {
   def doSomething() = 1
 }
 
-trait ThrottledService extends ThrottleDirective {
-  implicit def throttleConf: ThrottleConfiguration
+class ThrottleDirectiveTest extends FunSuite
+    with MockitoSugar
+    with ScalatestRouteTest
+    with ThrottleDirective
+    with BeforeAndAfter {
+  import PathDirectives._
+  import RouteDirectives._
+  import MethodDirectives._
+  private val service = mock[SomeService]
+  private val settings = mock[MetricThrottleSettings]
 
-  implicit def storageClient: StorageClient
-
-  implicit def service: SomeService
-
-  def throttledRoute = throttle {
+  def throttledRoute = throttle(settings) {
     pathEndOrSingleSlash {
       get {
         complete {
@@ -32,27 +36,15 @@ trait ThrottledService extends ThrottleDirective {
       }
     }
   }
-}
-
-class ThrottleDirectiveTest extends FunSuite
-    with MockitoSugar
-    with ScalatestRouteTest
-    with ThrottledService
-    with BeforeAndAfter {
-  implicit override val throttleConf = mock[ThrottleConfiguration]
-  implicit override val storageClient = mock[StorageClient]
-  implicit override val service = mock[SomeService]
 
   before {
-    reset(storageClient, throttleConf)
+    reset(service, settings)
   }
 
   when(service.doSomething()).thenReturn(1)
 
   test("Throttle should reject request if limit is reached") {
-    val key = "2184121"
-    when(storageClient.getCount(key)).thenReturn(Option(51))
-    when(throttleConf.maxCalls).thenReturn(50)
+    when(settings.shouldThrottle(anyObject())).thenReturn(true)
 
     Get("/") ~> throttledRoute ~> check {
       assert(status === StatusCodes.TooManyRequests)
@@ -62,15 +54,13 @@ class ThrottleDirectiveTest extends FunSuite
   }
 
   test("Throttle should not reject request if limit is not reached") {
-    val key = "2184121"
-    when(storageClient.getCount(key)).thenReturn(Option(5))
-    when(throttleConf.maxCalls).thenReturn(50)
-    when(throttleConf.removeTimeLimit).thenReturn(None)
+    when(settings.shouldThrottle(anyObject())).thenReturn(false)
 
     Get("/") ~> throttledRoute ~> check {
       assert(status === StatusCodes.OK)
       assert(responseAs[String] === "done")
       verify(service, times(1)).doSomething()
+      verify(settings, times(1)).onExecute(anyObject[HttpRequest])
     }
   }
 }
