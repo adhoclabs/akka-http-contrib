@@ -1,0 +1,8 @@
+*.swp
+*.log
+.idea/
+.idea_modules/
+target/
+.history
+.DS_Store
+*.iml
