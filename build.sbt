@@ -24,3 +24,11 @@ libraryDependencies ++= {
     "org.mockito"                   %  "mockito-all"                             % "1.10.19"   % "test"
   )
 }
+
+coverageMinimum := 90
+
+coverageFailOnMinimum := false
+
+coverageAggregate := true
+
+coverageEnabled.in(Test, test) := true
