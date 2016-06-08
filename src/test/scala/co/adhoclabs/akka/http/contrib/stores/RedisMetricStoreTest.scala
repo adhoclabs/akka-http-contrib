@@ -50,15 +50,15 @@ class RedisMetricStoreTest extends FunSuite
     verify(redisClientMock, times(1)).get(key)
   }
 
-  test("reset should set count to zero and set a new expiration date") {
+  test("set should set count to zero and set a new expiration date") {
     val key = "sWgFkJ4eOcXztXPxjNOZkQ=="
     val captor = ArgumentCaptor.forClass(classOf[RedisClient ⇒ Boolean])
     val expiration = ((System.currentTimeMillis() + getEndpoint.expiration.window.toMillis) / 1000).toInt
-    when(redisClientMock.setex(key, expiration, 0)).thenReturn(true)
-    store.set(getEndpoint, "/user/someUserId", 0)
+    when(redisClientMock.setex(key, expiration, 0L)).thenReturn(true)
+    store.set(getEndpoint, "/user/someUserId", 0L)
     verify(redisClientPoolMock, times(1)).withClient(captor.capture())
     captor.getValue.apply(redisClientMock)
-    verify(redisClientMock, times(1)).setex(key, expiration, 0)
+    verify(redisClientMock, times(1)).setex(key, expiration, 0L)
   }
 
   test("incr should set count to one and set a new expiration date for a non existent key") {
