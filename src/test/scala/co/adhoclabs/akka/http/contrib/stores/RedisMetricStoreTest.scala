@@ -55,7 +55,7 @@ class RedisMetricStoreTest extends FunSuite
     val captor = ArgumentCaptor.forClass(classOf[RedisClient ⇒ Boolean])
     val expiration = ((System.currentTimeMillis() + getEndpoint.expiration.window.toMillis) / 1000).toInt
     when(redisClientMock.setex(key, expiration, 0)).thenReturn(true)
-    store.reset(getEndpoint, "/user/someUserId")
+    store.set(getEndpoint, "/user/someUserId", 0)
     verify(redisClientPoolMock, times(1)).withClient(captor.capture())
     captor.getValue.apply(redisClientMock)
     verify(redisClientMock, times(1)).setex(key, expiration, 0)

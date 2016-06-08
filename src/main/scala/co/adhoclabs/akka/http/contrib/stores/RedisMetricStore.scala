@@ -1,6 +1,5 @@
 package co.adhoclabs.akka.http.contrib.stores
 
-import akka.http.scaladsl.model.HttpRequest
 import co.adhoclabs.akka.http.contrib.throttle.ThrottleEndpoint
 import com.redis.RedisClientPool
 
@@ -18,10 +17,10 @@ class RedisMetricStore(val redis: RedisClientPool) extends MetricStore {
     redis.withClient(_.get(key)).map(_.toLong).getOrElse(0)
   }
 
-  override def reset(endpoint: ThrottleEndpoint, url: String): Unit = {
+  override def set(endpoint: ThrottleEndpoint, url: String, count: Long): Unit = {
     val key = keyForEndpoint(endpoint, url)
     val expiration = (System.currentTimeMillis() + endpoint.expiration.window.toMillis) / 1000
-    redis.withClient(_.setex(key, expiration.toInt, 0))
+    redis.withClient(_.setex(key, expiration.toInt, count))
   }
 
   /**
