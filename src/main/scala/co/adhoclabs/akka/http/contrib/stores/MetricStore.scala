@@ -30,5 +30,5 @@ trait MetricStore {
    */
   def incr(endpoint: ThrottleEndpoint, url: String): Unit
 
-  def reset(endpoint: ThrottleEndpoint, url: String): Unit
+  def set(endpoint: ThrottleEndpoint, url: String, count: Long)
 }
