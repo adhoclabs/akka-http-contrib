@@ -1,66 +1,61 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.{ HttpRequest, StatusCodes }
-import akka.http.scaladsl.server.directives.{ MethodDirectives, PathDirectives, RouteDirectives }
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.{ BeforeAndAfter, FunSuite }
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{ Matchers, WordSpecLike }
 
-/*
- Dummy service to mock and to use in the test to check if the throttle directive is working.
+import scala.concurrent.Future
+
+/**
+ * Created by yeghishe on 6/10/16.
  */
-class SomeService {
-  def doSomething() = 1
-}
+class ThrottleDirectiveTest extends WordSpecLike
+    with Matchers
+    with ScalaFutures
+    with MockFactory
+    with ScalatestRouteTest {
 
-class ThrottleDirectiveTest extends FunSuite
-    with MockitoSugar
-    with ScalatestRouteTest
-    with ThrottleDirective
-    with BeforeAndAfter {
-  import PathDirectives._
-  import RouteDirectives._
-  import MethodDirectives._
-  private val service = mock[SomeService]
-  private val settings = mock[MetricThrottleSettings]
+  import Directives._
+  import ThrottleDirective._
 
-  def throttledRoute = throttle(settings) {
-    pathEndOrSingleSlash {
+  private trait Doer {
+    def doWork(): String
+  }
+
+  private val doer = mock[Doer]
+  private val throttleSettings = mock[ThrottleSettings]
+  private val routes = throttle(throttleSettings) {
+    pathPrefix("hello") {
       get {
-        complete {
-          service.doSomething()
-          "done"
-        }
+        complete(doer.doWork())
       }
     }
   }
 
-  before {
-    reset(service, settings)
-  }
+  "ThrottleDirective" when {
+    "throttle" should {
+      "throttle if shouldThrottle returns true" in {
+        (throttleSettings.shouldThrottle _).expects(*).returns(Future(true))
 
-  when(service.doSomething()).thenReturn(1)
+        Get("/hello") ~> routes ~> check {
+          status should be(StatusCodes.TooManyRequests)
+          responseAs[String] should be("The user has sent too many requests in a given amount of time.")
+        }
+      }
 
-  test("Throttle should reject request if limit is reached") {
-    when(settings.shouldThrottle(anyObject())).thenReturn(true)
+      "NOT throttle if shouldThrottle returns false and allow innter route to execute" in {
+        (doer.doWork _).expects().returns("done")
+        (throttleSettings.shouldThrottle _).expects(*).returns(Future(false))
+        (throttleSettings.onExecute _).expects(*).returns(Future(()))
 
-    Get("/") ~> throttledRoute ~> check {
-      assert(status === StatusCodes.TooManyRequests)
-      assert(responseAs[String] === "The user has sent too many requests in a given amount of time.")
-      verify(service, times(0)).doSomething()
-    }
-  }
-
-  test("Throttle should not reject request if limit is not reached") {
-    when(settings.shouldThrottle(anyObject())).thenReturn(false)
-
-    Get("/") ~> throttledRoute ~> check {
-      assert(status === StatusCodes.OK)
-      assert(responseAs[String] === "done")
-      verify(service, times(1)).doSomething()
-      verify(settings, times(1)).onExecute(anyObject[HttpRequest])
+        Get("/hello") ~> routes ~> check {
+          status should be(StatusCodes.OK)
+          responseAs[String] should be("done")
+        }
+      }
     }
   }
 }
