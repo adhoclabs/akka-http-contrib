@@ -1,11 +1,13 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.{ HttpMethods, HttpRequest }
+import java.net.InetAddress
+
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RemoteAddress}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -18,9 +20,10 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
   private case class TestEndpoint(name: String) extends Endpoint {
     override def matches(request: HttpRequest)(implicit ec: ExecutionContext): Future[Boolean] =
       Future(request.uri.path.toString().contains(name))
-    override def getIdentifier(url: String): String = url
+    override def getIdentifier(remoteAddress: RemoteAddress, url: String): String = url
   }
 
+  private val localHost = RemoteAddress(InetAddress.getLocalHost)
   private val throttleDetails = ThrottleDetails(1 hour, 10)
   private val metricStore = mock[MetricStore]
   private val endpoint = ThrottleEndpoint(TestEndpoint("test"), throttleDetails)
@@ -35,23 +38,23 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
       "return false if no matching endpoint is found" in {
         val request = HttpRequest(method = HttpMethods.GET, uri = "/foo")
 
-        metricThrottleSettings.shouldThrottle(request).futureValue should be(false)
+        metricThrottleSettings.shouldThrottle(localHost, request).futureValue should be(false)
       }
 
       "return false if matching endpoint is found and metric store has count lower than max count" in {
         val url = "/test"
         val request = HttpRequest(method = HttpMethods.GET, uri = url)
-        (metricStore.get _).expects(endpoint, url) returning Future(throttleDetails.allowedCalls - 1)
+        (metricStore.get _).expects(endpoint, localHost, url) returning Future(throttleDetails.allowedCalls - 1)
 
-        metricThrottleSettings.shouldThrottle(request).futureValue should be(false)
+        metricThrottleSettings.shouldThrottle(localHost, request).futureValue should be(false)
       }
 
       "return true if matching endpoint is found and metric store has count higher or equal to max count" in {
         val url = "/test"
         val request = HttpRequest(method = HttpMethods.GET, uri = url)
-        (metricStore.get _).expects(endpoint, url) returning Future(throttleDetails.allowedCalls)
+        (metricStore.get _).expects(endpoint, localHost, url) returning Future(throttleDetails.allowedCalls)
 
-        metricThrottleSettings.shouldThrottle(request).futureValue should be(true)
+        metricThrottleSettings.shouldThrottle(localHost, request).futureValue should be(true)
       }
     }
 
@@ -59,15 +62,15 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
       "do nothing if no matching endpoint is found" in {
         val request = HttpRequest(method = HttpMethods.GET, uri = "/foo")
 
-        metricThrottleSettings.onExecute(request).futureValue should be(())
+        metricThrottleSettings.onExecute(localHost, request).futureValue should be(())
       }
 
       "call metric store to increment the metric if matching endpoint is found" in {
         val url = "/test"
         val request = HttpRequest(method = HttpMethods.GET, uri = url)
-        (metricStore.incr _).expects(endpoint, url) returning Future(())
+        (metricStore.incr _).expects(endpoint, localHost, url) returning Future(())
 
-        metricThrottleSettings.onExecute(request).futureValue should be(())
+        metricThrottleSettings.onExecute(localHost, request).futureValue should be(())
       }
     }
 

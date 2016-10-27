@@ -1,8 +1,8 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.HttpRequest
+import akka.http.scaladsl.model.{HttpRequest, RemoteAddress}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MetricThrottleSettings extends ThrottleSettings {
   def store: MetricStore
@@ -16,12 +16,12 @@ trait MetricThrottleSettings extends ThrottleSettings {
       .map(_.flatten.headOption)
       .flatMap(_.fold(left)(right))
 
-  override def shouldThrottle(request: HttpRequest): Future[Boolean] = findAndRun(request, Future(false)) { te ⇒
-    store.get(te, request.uri.path.toString()).map(_ >= te.throttleDetails.allowedCalls)
+  override def shouldThrottle(remoteAddress: RemoteAddress, request: HttpRequest): Future[Boolean] = findAndRun(request, Future(false)) { te ⇒
+    store.get(te, remoteAddress, request.uri.path.toString()).map(_ >= te.throttleDetails.allowedCalls)
   }
 
-  override def onExecute(request: HttpRequest): Future[Unit] = findAndRun(request, Future(())) { te ⇒
-    store.incr(te, request.uri.path.toString())
+  override def onExecute(remoteAddress: RemoteAddress, request: HttpRequest): Future[Unit] = findAndRun(request, Future(())) { te ⇒
+    store.incr(te, remoteAddress, request.uri.path.toString())
   }
 }
 

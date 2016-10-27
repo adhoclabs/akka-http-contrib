@@ -1,8 +1,9 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import scredis.io.{ Connection, NonBlockingConnection, TransactionEnabledConnection }
+import akka.http.scaladsl.model.RemoteAddress
+import scredis.io.{Connection, NonBlockingConnection, TransactionEnabledConnection}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object RedisMetricStore {
   import scredis.commands._
@@ -28,19 +29,19 @@ object RedisMetricStore {
 class RedisMetricStore(
     val redis: RedisMetricStore.RedisT, namespace: String = ""
 )(implicit ec: ExecutionContext) extends MetricStore {
-  override def keyForEndpoint(throttleEndpoint: ThrottleEndpoint, url: String): String =
-    s"$namespace${super.keyForEndpoint(throttleEndpoint, url)}"
+  override def keyForEndpoint(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): String =
+    s"$namespace${super.keyForEndpoint(throttleEndpoint, remoteAddress, url)}"
 
-  override def get(throttleEndpoint: ThrottleEndpoint, url: String): Future[Long] = {
+  override def get(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Long] = {
     import scredis.serialization.Implicits.longReader
-    redis.get(keyForEndpoint(throttleEndpoint, url)).map(_.getOrElse(0))
+    redis.get(keyForEndpoint(throttleEndpoint, remoteAddress, url)).map(_.getOrElse(0))
   }
 
-  override def set(throttleEndpoint: ThrottleEndpoint, url: String, count: Long): Future[Unit] =
-    redis.pSetEX(keyForEndpoint(throttleEndpoint, url), count, throttleEndpoint.throttleDetails.window.toMillis)
+//  override def set(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String, count: Long): Future[Unit] =
+//    redis.pSetEX(keyForEndpoint(throttleEndpoint, remoteAddress, url), count, throttleEndpoint.throttleDetails.window.toMillis)
 
-  override def incr(throttleEndpoint: ThrottleEndpoint, url: String): Future[Unit] = {
-    val key = keyForEndpoint(throttleEndpoint, url)
+  override def incr(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Unit] = {
+    val key = keyForEndpoint(throttleEndpoint, remoteAddress, url)
     val ex = throttleEndpoint.throttleDetails.window.toMillis
     for {
       e ← redis.exists(key)
