@@ -31,5 +31,5 @@ trait MetricStore {
    */
   def incr(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Unit]
 
-//  def set(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String, count: Long): Future[Unit]
+  //  def set(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String, count: Long): Future[Unit]
 }

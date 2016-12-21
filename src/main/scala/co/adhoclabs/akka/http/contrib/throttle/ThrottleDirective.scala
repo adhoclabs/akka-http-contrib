@@ -9,15 +9,16 @@ trait ThrottleDirective {
   import RouteDirectives._
   import MiscDirectives._
 
-  def throttle(implicit settings: ThrottleSettings): Directive0 = (extractClientIP & extractRequest).tflatMap { case (ipAddress, request) ⇒
-    onSuccess(settings.shouldThrottle(ipAddress, request)).flatMap { should ⇒
-      if (should) {
-        reject(TooManyRequestsRejection())
-      } else {
-        settings.onExecute(ipAddress, request)
-        Directive.Empty
+  def throttle(implicit settings: ThrottleSettings): Directive0 = (extractClientIP & extractRequest).tflatMap {
+    case (ipAddress, request) ⇒
+      onSuccess(settings.shouldThrottle(ipAddress, request)).flatMap { should ⇒
+        if (should) {
+          reject(TooManyRequestsRejection())
+        } else {
+          settings.onExecute(ipAddress, request)
+          Directive.Empty
+        }
       }
-    }
   }
 }
 

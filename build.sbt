@@ -1,4 +1,4 @@
-import org.scalastyle.sbt.ScalastylePlugin.{ projectSettings => scalaStyleSettings }
+import org.scalastyle.sbt.ScalastylePlugin.{projectSettings => scalaStyleSettings}
 import scalariform.formatter.preferences._
 
 organization := "co.adhoclabs"
@@ -11,20 +11,27 @@ scalaVersion := "2.11.8"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
+resolvers ++= {
+  Seq(
+    "sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  )
+}
+
 libraryDependencies ++= {
-  val akkaVersion = "2.4.6"
-  val scalaTestV  = "3.0.0-M15"
-  val scalaMockV  = "3.2.2"
-  val scredisV    = "2.0.6"
+  val akkaHttpVersion = "10.0.0"
+  val scalaTestV = "3.0.0-M15"
+  val scalaMockV = "3.2.2"
 
   Seq(
-    "com.typesafe.akka" %% "akka-http-core"                    % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-experimental"            % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http-testkit"                 % akkaVersion % "test",
-    "com.livestream"    %% "scredis"                           % scredisV,
-    "org.scalatest"     %% "scalatest"                         % scalaTestV  % "test",
-    "org.scalamock"     %% "scalamock-scalatest-support"       % scalaMockV  % "test"
+    "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+
+    "com.github.etaty" %% "rediscala" % "1.8.0-SNAPSHOT",
+
+    "org.scalatest" %% "scalatest" % scalaTestV % "test",
+    "org.scalamock" %% "scalamock-scalatest-support" % scalaMockV % "test"
   )
 }
 

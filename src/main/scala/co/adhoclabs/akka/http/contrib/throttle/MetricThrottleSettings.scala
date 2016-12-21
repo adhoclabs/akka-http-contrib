@@ -1,8 +1,8 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.{HttpRequest, RemoteAddress}
+import akka.http.scaladsl.model.{ HttpRequest, RemoteAddress }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MetricThrottleSettings extends ThrottleSettings {
   def store: MetricStore
@@ -25,8 +25,3 @@ trait MetricThrottleSettings extends ThrottleSettings {
   }
 }
 
-object MetricThrottleSettings {
-  def fromConfig(implicit ec: ExecutionContext): MetricThrottleSettings = new ConfigMetricThrottleSettings {
-    override implicit val executor: ExecutionContext = ec
-  }
-}

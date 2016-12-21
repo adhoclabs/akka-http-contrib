@@ -2,6 +2,7 @@ package co.adhoclabs.akka.http.contrib.throttle
 
 import java.net.InetAddress
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RemoteAddress}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
@@ -16,6 +17,7 @@ import scala.language.postfixOps
  */
 class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFutures with MockFactory {
   import scala.concurrent.ExecutionContext.Implicits.global
+  private val systemLocal = ActorSystem()
 
   private case class TestEndpoint(name: String) extends Endpoint {
     override def matches(request: HttpRequest)(implicit ec: ExecutionContext): Future[Boolean] =
@@ -28,6 +30,7 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
   private val metricStore = mock[MetricStore]
   private val endpoint = ThrottleEndpoint(TestEndpoint("test"), throttleDetails)
   private val metricThrottleSettings = new MetricThrottleSettings {
+    override protected implicit def system: ActorSystem = systemLocal
     override implicit val executor: ExecutionContext = implicitly
     override val store: MetricStore = metricStore
     override val endpoints: List[ThrottleEndpoint] = List(endpoint)
@@ -71,12 +74,6 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
         (metricStore.incr _).expects(endpoint, localHost, url) returning Future(())
 
         metricThrottleSettings.onExecute(localHost, request).futureValue should be(())
-      }
-    }
-
-    "fromConfig" should {
-      "create ConfigMetricThrottleSettings" in {
-        MetricThrottleSettings.fromConfig shouldBe a[ConfigMetricThrottleSettings]
       }
     }
   }
