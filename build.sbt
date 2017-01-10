@@ -28,7 +28,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
 
-    "com.github.etaty" %% "rediscala" % "1.8.0-SNAPSHOT",
+    "com.github.etaty" %% "rediscala" % "1.8.0",
 
     "org.scalatest" %% "scalatest" % scalaTestV % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % scalaMockV % "test"
