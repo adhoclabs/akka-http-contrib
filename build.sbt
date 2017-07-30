@@ -9,6 +9,8 @@ version := "0.0.7"
 
 scalaVersion := "2.12.3"
 
+scapegoatVersion := "1.3.1"
+
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 resolvers ++= {
