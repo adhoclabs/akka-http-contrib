@@ -22,7 +22,7 @@ class ConfigMetricThrottleSettingsTest extends WordSpecLike with Matchers with M
 
   private def getSettings(config: String): ConfigMetricThrottleSettings = new ConfigMetricThrottleSettings {
     override protected implicit def system: ActorSystem = systemLocal
-    override implicit val executor: ExecutionContext = implicitly
+    override implicit val executor: ExecutionContext = system.dispatcher
     override val throttleConfig: Config = ConfigFactory.parseString(config).getConfig("throttle")
   }
 
