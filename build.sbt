@@ -7,7 +7,7 @@ name := "akka-http-contrib"
 
 version := "0.0.7"
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.11.8"
 
 scapegoatVersion := "1.3.1"
 
