@@ -1,15 +1,12 @@
 import org.scalastyle.sbt.ScalastylePlugin.{projectSettings => scalaStyleSettings}
-import scalariform.formatter.preferences._
 
 organization := "co.adhoclabs"
 
 name := "akka-http-contrib"
 
-version := "0.0.7"
+version := "1.0.0"
 
-scalaVersion := "2.11.8"
-
-scapegoatVersion := "1.3.1"
+scalaVersion := "2.11.11"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
@@ -20,9 +17,9 @@ resolvers ++= {
 }
 
 libraryDependencies ++= {
-  val akkaHttpV = "10.0.9"
+  val akkaHttpV = "10.0.10"
   val scalaTestV = "3.0.3"
-  val scalaMockV = "3.6.0"
+  val scalaMockV = "3.2.2"
 
   Seq(
     "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
