@@ -1,5 +1,3 @@
-import org.scalastyle.sbt.ScalastylePlugin.{projectSettings => scalaStyleSettings}
-
 organization := "co.adhoclabs"
 
 name := "akka-http-contrib"
@@ -10,16 +8,12 @@ scalaVersion := "2.11.11"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
-resolvers ++= {
-  Seq(
-    "sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-  )
-}
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= {
   val akkaHttpV = "10.0.10"
   val scalaTestV = "3.0.3"
-  val scalaMockV = "3.2.2"
+  val scalaMockV = "3.6.0"
 
   Seq(
     "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
