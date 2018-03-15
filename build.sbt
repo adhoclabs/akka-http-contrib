@@ -2,16 +2,16 @@ organization := "co.adhoclabs"
 
 name := "akka-http-contrib"
 
-version := "1.0.0"
+version := "2.0.0"
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.12.4"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= {
-  val akkaHttpV = "10.0.10"
+  val akkaHttpV = "10.1.10"
   val scalaTestV = "3.0.3"
   val scalaMockV = "3.6.0"
 
