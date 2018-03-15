@@ -11,11 +11,13 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= {
-  val akkaHttpV = "10.1.10"
+  val akkaV = "2.5.11"
+  val akkaHttpV = "10.1.0"
   val scalaTestV = "3.0.3"
   val scalaMockV = "3.6.0"
 
   Seq(
+    "com.typesafe.akka" %% "akka-stream" % akkaV withSources(),
     "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpV,
