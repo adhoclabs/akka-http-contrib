@@ -1,23 +1,24 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.directives.{ BasicDirectives, FutureDirectives, RouteDirectives }
+import akka.http.scaladsl.server.directives.{ BasicDirectives, FutureDirectives, RouteDirectives, MiscDirectives }
 import akka.http.scaladsl.server.{ Directive, Directive0 }
 
 trait ThrottleDirective {
   import BasicDirectives._
-  import RouteDirectives._
   import FutureDirectives._
+  import RouteDirectives._
+  import MiscDirectives._
 
-  def throttle(implicit settings: ThrottleSettings): Directive0 = extractRequest.flatMap { r ⇒
-    onSuccess(settings.shouldThrottle(r)).flatMap { should ⇒
-      if (should) {
-        complete(StatusCodes.TooManyRequests)
-      } else {
-        settings.onExecute(r)
-        Directive.Empty
+  def throttle(implicit settings: ThrottleSettings): Directive0 = (extractClientIP & extractRequest).tflatMap {
+    case (ipAddress, request) ⇒
+      onSuccess(settings.shouldThrottle(ipAddress, request)).flatMap { should ⇒
+        if (should) {
+          reject(TooManyRequestsRejection())
+        } else {
+          settings.onExecute(ipAddress, request)
+          Directive.Empty
+        }
       }
-    }
   }
 }
 

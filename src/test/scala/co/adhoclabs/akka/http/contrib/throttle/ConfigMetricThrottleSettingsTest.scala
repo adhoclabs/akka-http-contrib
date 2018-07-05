@@ -1,8 +1,9 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import akka.actor.ActorSystem
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -17,8 +18,11 @@ class ConfigMetricThrottleSettingsTest extends WordSpecLike with Matchers with M
   import scala.concurrent.ExecutionContext.Implicits.global
   import HttpMethods._
 
+  private val systemLocal = ActorSystem()
+
   private def getSettings(config: String): ConfigMetricThrottleSettings = new ConfigMetricThrottleSettings {
-    override implicit val executor: ExecutionContext = implicitly
+    override protected implicit def system: ActorSystem = systemLocal
+    override implicit val executor: ExecutionContext = system.dispatcher
     override val throttleConfig: Config = ConfigFactory.parseString(config).getConfig("throttle")
   }
 

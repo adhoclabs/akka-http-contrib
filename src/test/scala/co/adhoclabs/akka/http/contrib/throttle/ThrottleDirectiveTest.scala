@@ -1,11 +1,13 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.StatusCodes
+import java.net.InetAddress
+
+import akka.http.scaladsl.model.{RemoteAddress, StatusCodes}
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.Future
 
@@ -25,6 +27,7 @@ class ThrottleDirectiveTest extends WordSpecLike
     def doWork(): String
   }
 
+  private val localHost = RemoteAddress(InetAddress.getLocalHost)
   private val doer = mock[Doer]
   private val throttleSettings = mock[ThrottleSettings]
   private val routes = throttle(throttleSettings) {
@@ -38,7 +41,7 @@ class ThrottleDirectiveTest extends WordSpecLike
   "ThrottleDirective" when {
     "throttle" should {
       "throttle if shouldThrottle returns true" in {
-        (throttleSettings.shouldThrottle _).expects(*).returns(Future(true))
+        (throttleSettings.shouldThrottle _).expects(localHost, *).returns(Future(true))
 
         Get("/hello") ~> routes ~> check {
           status should be(StatusCodes.TooManyRequests)
@@ -48,8 +51,8 @@ class ThrottleDirectiveTest extends WordSpecLike
 
       "NOT throttle if shouldThrottle returns false and allow innter route to execute" in {
         (doer.doWork _).expects().returns("done")
-        (throttleSettings.shouldThrottle _).expects(*).returns(Future(false))
-        (throttleSettings.onExecute _).expects(*).returns(Future(()))
+        (throttleSettings.shouldThrottle _).expects(localHost, *).returns(Future(false))
+        (throttleSettings.onExecute _).expects(localHost, *).returns(Future(()))
 
         Get("/hello") ~> routes ~> check {
           status should be(StatusCodes.OK)

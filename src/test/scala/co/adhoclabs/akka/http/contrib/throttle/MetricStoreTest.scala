@@ -1,13 +1,14 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
+import java.net.InetAddress
+
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{ Matchers, PropSpec }
+import org.scalatest.{Matchers, PropSpec}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-
-import akka.http.scaladsl.model.HttpMethods
+import akka.http.scaladsl.model.{HttpMethods, RemoteAddress}
 
 /**
  * Created by yeghishe on 6/10/16.
@@ -22,13 +23,13 @@ class MetricStoreTest extends PropSpec with TableDrivenPropertyChecks with Match
     (ThrottleEndpoint(RegexEndpoint(GET, "^/hello/([-\\w]*)[/]?"), ThrottleDetails(1 hour, 10)), "/hello/10", "7a490b0204113cf1449bf81938884c8c")
   )
 
-  override def get(throttleEndpoint: ThrottleEndpoint, url: String): Future[Long] = ???
-  override def set(throttleEndpoint: ThrottleEndpoint, url: String, count: Long): Future[Unit] = ???
-  override def incr(throttleEndpoint: ThrottleEndpoint, url: String): Future[Unit] = ???
+  override def get(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Long] = ???
+//  override def set(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String, count: Long): Future[Unit] = ???
+  override def incr(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Unit] = ???
 
   property("should calculate md5 right") {
     forAll(examples) { (endpoint, url, md5) ⇒
-      keyForEndpoint(endpoint, url) should equal(md5)
+      keyForEndpoint(endpoint, RemoteAddress(InetAddress.getLocalHost), url) should equal(md5)
     }
   }
 }

@@ -1,10 +1,11 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import akka.http.scaladsl.model.HttpRequest
+import java.net.InetAddress
+
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RemoteAddress}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ Matchers, PropSpec }
+import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.TableDrivenPropertyChecks
-import akka.http.scaladsl.model.HttpMethods
 
 /**
  * Created by yeghishe on 6/10/16.
@@ -15,8 +16,8 @@ class RegexEndpointTest extends PropSpec with TableDrivenPropertyChecks with Mat
 
   private val getIdentifierExamples = Table(
     ("endpoint", "url", "key"),
-    (RegexEndpoint(GET, "^\\/hello[/]?$"), "/hello", "GET /hello"),
-    (RegexEndpoint(POST, "^\\/hello[/]?$"), "/hello", "POST /hello")
+    (RegexEndpoint(GET, "^\\/hello[/]?$"), "/hello", "127.0.0.1 GET /hello"),
+    (RegexEndpoint(POST, "^\\/hello[/]?$"), "/hello", "127.0.0.1 POST /hello")
   )
 
   private val matchesExamples = Table(
@@ -28,7 +29,7 @@ class RegexEndpointTest extends PropSpec with TableDrivenPropertyChecks with Mat
 
   property("should construct the identifier right") {
     forAll(getIdentifierExamples) { (endpoint, url, key) ⇒
-      endpoint.getIdentifier(url) should equal(key)
+      endpoint.getIdentifier(RemoteAddress(InetAddress.getLocalHost), url) should equal(key)
     }
   }
 

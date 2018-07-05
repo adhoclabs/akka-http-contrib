@@ -2,12 +2,14 @@ package co.adhoclabs.akka.http.contrib.throttle
 
 import java.security.MessageDigest
 
+import akka.http.scaladsl.model.RemoteAddress
+
 import scala.concurrent.Future
 
 trait MetricStore {
-  def keyForEndpoint(throttleEndpoint: ThrottleEndpoint, url: String): String = MessageDigest
+  def keyForEndpoint(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): String = MessageDigest
     .getInstance("MD5")
-    .digest(throttleEndpoint.endpoint.getIdentifier(url).getBytes)
+    .digest(throttleEndpoint.endpoint.getIdentifier(remoteAddress, url).getBytes)
     .map(0xFF & _)
     .map("%02x".format(_))
     .mkString
@@ -20,14 +22,14 @@ trait MetricStore {
    *
    * @return
    */
-  def get(throttleEndpoint: ThrottleEndpoint, url: String): Future[Long]
+  def get(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Long]
 
   /**
    * Same rules apply here as in get. incr should set the value to current value + 1 for current window or 1.
    *
    * @param throttleEndpoint
    */
-  def incr(throttleEndpoint: ThrottleEndpoint, url: String): Future[Unit]
+  def incr(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String): Future[Unit]
 
-  def set(throttleEndpoint: ThrottleEndpoint, url: String, count: Long): Future[Unit]
+  //  def set(throttleEndpoint: ThrottleEndpoint, remoteAddress: RemoteAddress, url: String, count: Long): Future[Unit]
 }

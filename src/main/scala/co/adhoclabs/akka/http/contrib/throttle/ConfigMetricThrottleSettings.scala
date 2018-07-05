@@ -2,13 +2,10 @@ package co.adhoclabs.akka.http.contrib.throttle
 
 import akka.http.scaladsl.model.{ HttpMethod, HttpMethods }
 import co.adhoclabs.akka.http.contrib.Config
+import redis.RedisClient
 
 import scala.concurrent.duration._
-import scredis.{ Redis, RedisConfig }
 
-/**
- * Created by yeghishe on 6/13/16.
- */
 trait ConfigMetricThrottleSettings extends MetricThrottleSettings with Config {
   import scala.collection.JavaConverters._
 
@@ -18,7 +15,7 @@ trait ConfigMetricThrottleSettings extends MetricThrottleSettings with Config {
 
   override lazy val store: MetricStore = storeConfig match {
     case "redis" ⇒ new RedisMetricStore(
-      Redis(RedisConfig(throttleConfig)),
+      RedisClient(throttleConfig.getString("redis_host"), throttleConfig.getInt("redis_port")),
       throttleConfig.getConfig("redis").getString("namespace")
     )
   }
