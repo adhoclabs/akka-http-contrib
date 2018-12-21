@@ -5,6 +5,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
+//import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import akka.http.scaladsl.model.HttpMethods
 
@@ -18,7 +19,7 @@ class ConfigMetricThrottleSettingsTest extends WordSpecLike with Matchers with M
   import HttpMethods._
 
   private def getSettings(config: String): ConfigMetricThrottleSettings = new ConfigMetricThrottleSettings {
-    override implicit val executor: ExecutionContext = implicitly
+    override implicit val executor: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
     override val throttleConfig: Config = ConfigFactory.parseString(config).getConfig("throttle")
   }
 

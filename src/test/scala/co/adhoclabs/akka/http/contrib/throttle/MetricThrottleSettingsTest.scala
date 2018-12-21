@@ -17,7 +17,7 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
 
   private case class TestEndpoint(name: String) extends Endpoint {
     override def matches(request: HttpRequest)(implicit ec: ExecutionContext): Future[Boolean] =
-      Future(request.uri.path.toString().contains(name))
+      Future(request.uri.path.toString().contains(name))(ec)
     override def getIdentifier(url: String): String = url
   }
 
@@ -25,7 +25,7 @@ class MetricThrottleSettingsTest extends WordSpecLike with Matchers with ScalaFu
   private val metricStore = mock[MetricStore]
   private val endpoint = ThrottleEndpoint(TestEndpoint("test"), throttleDetails)
   private val metricThrottleSettings = new MetricThrottleSettings {
-    override implicit val executor: ExecutionContext = implicitly
+    override implicit val executor: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
     override val store: MetricStore = metricStore
     override val endpoints: List[ThrottleEndpoint] = List(endpoint)
   }

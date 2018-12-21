@@ -1,45 +1,50 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
-import scredis.io.{ Connection, NonBlockingConnection, TransactionEnabledConnection }
+import scredis.io.NonBlockingConnection
+import scredis.protocol.Request
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object RedisMetricStore {
   import scredis.commands._
 
-  type RedisT = ConnectionCommands with ServerCommands with KeyCommands with StringCommands with HashCommands with ListCommands with SetCommands with SortedSetCommands with ScriptingCommands with HyperLogLogCommands with PubSubCommands with TransactionCommands
-  trait RedisTT extends ConnectionCommands
-    with ServerCommands
-    with KeyCommands
-    with StringCommands
-    with HashCommands
-    with ListCommands
-    with SetCommands
-    with SortedSetCommands
-    with ScriptingCommands
-    with HyperLogLogCommands
-    with PubSubCommands
-    with TransactionCommands
-    with Connection
-    with NonBlockingConnection
-    with TransactionEnabledConnection
+  type RedisT =
+    NonBlockingConnection with KeyCommands with StringCommands
+
+  trait RedisTT
+      extends NonBlockingConnection
+      with StringCommands
+      with KeyCommands {
+    override def send[A](request: Request[A]): Future[A] = request.future
+  }
 }
 
+// used methods of RedisT: StringCommands#get, pSetEX & Keycommands#pExpire
+
 class RedisMetricStore(
-    val redis: RedisMetricStore.RedisT, namespace: String = ""
-)(implicit ec: ExecutionContext) extends MetricStore {
-  override def keyForEndpoint(throttleEndpoint: ThrottleEndpoint, url: String): String =
+    val redis: RedisMetricStore.RedisT,
+    namespace: String = ""
+)(implicit ec: ExecutionContext)
+    extends MetricStore {
+  override def keyForEndpoint(throttleEndpoint: ThrottleEndpoint,
+                              url: String): String =
     s"$namespace${super.keyForEndpoint(throttleEndpoint, url)}"
 
-  override def get(throttleEndpoint: ThrottleEndpoint, url: String): Future[Long] = {
+  override def get(throttleEndpoint: ThrottleEndpoint,
+                   url: String): Future[Long] = {
     import scredis.serialization.Implicits.longReader
     redis.get(keyForEndpoint(throttleEndpoint, url)).map(_.getOrElse(0))
   }
 
-  override def set(throttleEndpoint: ThrottleEndpoint, url: String, count: Long): Future[Unit] =
-    redis.pSetEX(keyForEndpoint(throttleEndpoint, url), count, throttleEndpoint.throttleDetails.window.toMillis)
+  override def set(throttleEndpoint: ThrottleEndpoint,
+                   url: String,
+                   count: Long): Future[Unit] =
+    redis.pSetEX(keyForEndpoint(throttleEndpoint, url),
+                 count,
+                 throttleEndpoint.throttleDetails.window.toMillis)
 
-  override def incr(throttleEndpoint: ThrottleEndpoint, url: String): Future[Unit] = {
+  override def incr(throttleEndpoint: ThrottleEndpoint,
+                    url: String): Future[Unit] = {
     val key = keyForEndpoint(throttleEndpoint, url)
     val ex = throttleEndpoint.throttleDetails.window.toMillis
     for {
