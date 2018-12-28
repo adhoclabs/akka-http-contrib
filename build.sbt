@@ -15,6 +15,8 @@ libraryDependencies ++= {
   val scalaMockV = "4.1.0"
   val scredisV = "2.2.3"
   val scalacacheV = "0.27.0"
+  val scalaLoggingV = "3.9.0"
+  val logbackV = "1.2.3"
 
   Seq(
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
@@ -23,6 +25,8 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
     "com.github.scredis" %% "scredis" % scredisV,
     "com.github.cb372" %% "scalacache-caffeine" % scalacacheV,
+    "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV,
+    "ch.qos.logback" % "logback-classic" % logbackV,
     "org.scalatest" %% "scalatest" % scalaTestV % "test",
     "org.scalamock" %% "scalamock" % scalaMockV % "test"
   )
