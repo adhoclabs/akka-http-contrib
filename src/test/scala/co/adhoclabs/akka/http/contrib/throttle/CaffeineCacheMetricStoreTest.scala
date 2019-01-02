@@ -22,7 +22,7 @@ class CaffeineCacheMetricStoreTest
   private val metricStoreMock = mock[CaffeineCacheMetricStore]
   val metricStore = new CaffeineCacheMetricStore(namespace)
   private val throttleEndpoint =
-    ThrottleEndpoint(RegexEndpoint(GET, "p"), ThrottleDetails(1 minute, 10))
+    ThrottleEndpoint(RegexEndpoint(GET, "p"), ThrottleDetails(1 second, 1)) // TODO - check matching
   private val url = "/test"
   private val endpointKey = s"${namespace}195c099ecd65b57571d5e220a85e8ad5"
 
@@ -35,46 +35,45 @@ class CaffeineCacheMetricStoreTest
     }
 
     "get" should {
-      "return the value from redis" in {
+      "return the value from cache - mock" in {
         (metricStoreMock.get _)
           .expects(throttleEndpoint, url) returning Future(10L)
 
         metricStoreMock.get(throttleEndpoint, url).futureValue should equal(10)
       }
 
-//      "return 0 if value isn't in redis" in {
-//        (metricStore
-//          .get(throttleEndpoint, _: String)(_: Future[Long]))
-//          .expects(endpointKey, *) returning Future(None)
-//
-//        metricStore.get(throttleEndpoint, url).futureValue should equal(0)
-//      }
+      "return the value from cache" in {
+        val count = 3
+        metricStore.set(throttleEndpoint, url, count).futureValue
+        metricStore.get(throttleEndpoint, url).futureValue should equal(count)
+      }
+
+      "return 0 if value isn't in cache" in {
+        metricStore.get(throttleEndpoint, url).futureValue should equal(0)
+      }
     }
 
-//    "set" should {
-//      "set value with expiration in redis" in {
-//        val count = 10L
-//        (metricStore
-//          .pSetEX[Long](_: String, _: Long, _: Long)(_: Writer[Long]))
-//          .expects(endpointKey,
-//                   count,
-//                   throttleEndpoint.throttleDetails.window.toMillis,
-//                   *) returning Future(())
-//
-//        metricStore
-//          .set(throttleEndpoint, url, count)
-//          .futureValue should be(())
-//      }
-//    }
+    "set" should {
+      "set value with expiration in cache" in {
+        val count = 10L
+        metricStore.set(throttleEndpoint, url, count).futureValue
+        metricStore.get(throttleEndpoint, url).futureValue should equal(count)
+        Thread.sleep(throttleEndpoint.throttleDetails.window.toMillis)
+        metricStore.get(throttleEndpoint, url).futureValue should equal(0)
+      }
+    }
 
-//    "incr" should {
-//      "increment the value in redis if it exists" in {
+    "incr" should {
+      "increment the value in redis if it exists" in {
 //        (metricStore.exists _).expects(endpointKey) returning Future(true)
 //        (metricStore.incr _).expects(endpointKey) returning Future(
 //          throttleEndpoint.throttleDetails.allowedCalls / 2)
-//
-//        metricStore.incr(throttleEndpoint, url).futureValue should be(())
-//      }
+
+        metricStore.incr(throttleEndpoint, url).futureValue should be(())
+        metricStore.incr(throttleEndpoint, url).futureValue should be(())
+        metricStore.incr(throttleEndpoint, url).futureValue should be(())
+        metricStore.incr(throttleEndpoint, url).futureValue should be(())
+      }
 
 //      "set the value to 1 in redis if does not exist" in {
 //        (metricStore.exists _).expects(endpointKey) returning Future(false)
@@ -103,7 +102,7 @@ class CaffeineCacheMetricStoreTest
 //
 //        metricStore.incr(endpoint, url).futureValue should be(())
 //      }
-//    }
+    }
   }
 
 }

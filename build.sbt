@@ -6,7 +6,17 @@ version := "0.0.7-SNAPSHOT"
 
 scalaVersion := "2.12.8"
 
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+scalacOptions ++= Seq(
+  "-unchecked",
+  "-deprecation",
+  "-language:_",
+  "-target:jvm-1.8",
+  "-encoding",
+  "UTF-8",
+  "-Yrangepos", // required by SemanticDB compiler plugin
+  "-Ywarn-unused-import", // required by `RemoveUnused` rule
+  "-Ywarn-adapted-args"
+)
 
 libraryDependencies ++= {
   val akkaVersion = "2.5.12"
@@ -31,3 +41,10 @@ libraryDependencies ++= {
     "org.scalamock" %% "scalamock" % scalaMockV % "test"
   )
 }
+
+lazy val scalafmtSettings =
+  Seq(
+    scalafmtOnCompile := true
+  )
+
+lazy val settings = scalafmtSettings

@@ -9,16 +9,17 @@ trait ThrottleDirective {
   import RouteDirectives._
   import FutureDirectives._
 
-  def throttle(implicit settings: ThrottleSettings): Directive0 = extractRequest.flatMap { r ⇒
-    onSuccess(settings.shouldThrottle(r)).flatMap { should ⇒
-      if (should) {
-        complete(StatusCodes.TooManyRequests)
-      } else {
-        settings.onExecute(r)
-        Directive.Empty
+  def throttle(implicit settings: ThrottleSettings): Directive0 =
+    extractRequest.flatMap { r ⇒
+      onSuccess(settings.shouldThrottle(r)).flatMap { should ⇒
+        if (should) {
+          complete(StatusCodes.TooManyRequests)
+        } else {
+          settings.onExecute(r)
+          Directive.Empty
+        }
       }
     }
-  }
 }
 
 object ThrottleDirective extends ThrottleDirective
