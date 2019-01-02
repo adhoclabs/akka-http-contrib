@@ -20,10 +20,10 @@ trait MetricThrottleSettings extends ThrottleSettings with StrictLogging {
 
   override def shouldThrottle(request: HttpRequest): Future[Boolean] = {
     findAndRun(request, {
-      logger.info("not checking cache")
+      logger.debug(s"not checking cache for $request")
       Future(false)
     }) { te ⇒
-      logger.info("checking cache")
+      logger.info(s"checking cache for $request")
       store
         .get(te, request.uri.path.toString()) // TODO - use full request instead of uri
         .map { count =>
