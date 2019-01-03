@@ -22,7 +22,7 @@ class ConfigMetricThrottleSettingsTest extends WordSpecLike with Matchers with M
     new ConfigMetricThrottleSettings {
       implicit override val executor: ExecutionContext =
         scala.concurrent.ExecutionContext.Implicits.global
-      override val throttleConfig: Config =
+      override lazy val throttleConfig: Config =
         ConfigFactory.parseString(configString).getConfig("throttle")
     }
 

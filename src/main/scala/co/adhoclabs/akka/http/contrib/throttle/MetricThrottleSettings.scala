@@ -50,7 +50,7 @@ object MetricThrottleSettings {
 
   def fromConfig(cfg: Config)(implicit ec: ExecutionContext): MetricThrottleSettings =
     new ConfigMetricThrottleSettings {
-      override val config: Config                      = cfg
+      override lazy val config: Config                 = cfg
       implicit override val executor: ExecutionContext = ec
     }
 }
