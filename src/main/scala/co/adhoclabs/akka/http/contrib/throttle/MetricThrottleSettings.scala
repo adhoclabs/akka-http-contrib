@@ -1,6 +1,7 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
 import akka.http.scaladsl.model.HttpRequest
+import com.typesafe.config.Config
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -44,6 +45,12 @@ trait MetricThrottleSettings extends ThrottleSettings with StrictLogging {
 object MetricThrottleSettings {
   def fromConfig(implicit ec: ExecutionContext): MetricThrottleSettings =
     new ConfigMetricThrottleSettings {
+      implicit override val executor: ExecutionContext = ec
+    }
+
+  def fromConfig(cfg: Config)(implicit ec: ExecutionContext): MetricThrottleSettings =
+    new ConfigMetricThrottleSettings {
+      override val config: Config                      = cfg
       implicit override val executor: ExecutionContext = ec
     }
 }

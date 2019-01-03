@@ -1,7 +1,7 @@
 package co.adhoclabs.akka.http.contrib.throttle
 
 import akka.http.scaladsl.model.{ HttpMethod, HttpMethods }
-import co.adhoclabs.akka.http.contrib.Config
+import co.adhoclabs.akka.http.contrib.ContribConfig
 
 import scala.concurrent.duration._
 import scredis.{ Redis, RedisConfig }
@@ -9,7 +9,7 @@ import scredis.{ Redis, RedisConfig }
 /**
   * Created by yeghishe on 6/13/16.
   */
-trait ConfigMetricThrottleSettings extends MetricThrottleSettings with Config {
+trait ConfigMetricThrottleSettings extends MetricThrottleSettings with ContribConfig {
   import scala.collection.JavaConverters._
 
   private lazy val enabled     = throttleConfig.getBoolean("enabled")

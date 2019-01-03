@@ -12,16 +12,19 @@ import akka.http.scaladsl.model.HttpMethods
 import scala.language.postfixOps
 
 /**
- * Created by yeghishe on 6/13/16.
- */
+  * Created by yeghishe on 6/13/16.
+  */
 class ConfigMetricThrottleSettingsTest extends WordSpecLike with Matchers with MockFactory {
   import scala.concurrent.ExecutionContext.Implicits.global
   import HttpMethods._
 
-  private def getSettings(config: String): ConfigMetricThrottleSettings = new ConfigMetricThrottleSettings {
-    override implicit val executor: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-    override val throttleConfig: Config = ConfigFactory.parseString(config).getConfig("throttle")
-  }
+  private def getSettings(configString: String): ConfigMetricThrottleSettings =
+    new ConfigMetricThrottleSettings {
+      implicit override val executor: ExecutionContext =
+        scala.concurrent.ExecutionContext.Implicits.global
+      override val throttleConfig: Config =
+        ConfigFactory.parseString(configString).getConfig("throttle")
+    }
 
   "ConfigMetricThrottleSettings" when {
     "endpoints" should {
@@ -78,7 +81,8 @@ class ConfigMetricThrottleSettingsTest extends WordSpecLike with Matchers with M
             |}
           """.stripMargin
         val endpoints = List(
-          ThrottleEndpoint(RegexEndpoint(GET, "my pattern1"), ThrottleDetails(1 minute, 10, Some(11 hours))),
+          ThrottleEndpoint(RegexEndpoint(GET, "my pattern1"),
+                           ThrottleDetails(1 minute, 10, Some(11 hours))),
           ThrottleEndpoint(RegexEndpoint(POST, "my pattern2"), ThrottleDetails(2 minutes, 20))
         )
         getSettings(config).endpoints should equal(endpoints)
